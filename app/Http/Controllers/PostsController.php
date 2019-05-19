@@ -7,37 +7,28 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 
 use App\Post;
-use App\Http\Requests;
+use App\Http\Requests\postRequest;
+use App\Services\Posts\UpdateAttributesService;
 
 class PostsController extends Controller
 {
     public function index() {
-    	$posts = Post::all();
-    	return view('posts.index', compact('posts'));
+        $posts = Post::all();
+        return view('posts.index', compact('posts'));
     }
 
     public function new() {
-    	$post = new Post();
-    	return view('posts.new', compact('post'));
+        $post = new Post();
+        return view('posts.new', compact('post'));
     }
 
-    public function create(Requests\postRequest $request) {
-    	$post = new Post();
+    public function create(postRequest $request) {
+        $post = new Post();
 
-    	$postimage = $request->file('postimage');
-    	if ($postimage) {
-    		$extension = $postimage->getClientOriginalExtension();
-    		Storage::disk('public')->put($postimage->getFilename().'.'.$extension,  File::get($postimage));
-    		$post->mime = $postimage->getClientMimeType();
-    		$post->original_filename = $postimage->getClientOriginalName();
-    		$post->filename = $postimage->getFilename().'.'.$extension;
-    	}
+        $UpdateAttributesService = new UpdateAttributesService();
+        $UpdateAttributesService->update($request, $post);
 
-    	$post->title = request("title");
-    	$post->content = request("content");
-    	$post->save();
-
-    	return redirect ('/');
+        return redirect ('/');
     }
 
     public function show($id) {
@@ -53,18 +44,8 @@ class PostsController extends Controller
     public function update(Request $request, $id) {
         $post = Post::find($id);
 
-        $postimage = $request->file('postimage');
-        if ($postimage) {
-            $extension = $postimage->getClientOriginalExtension();
-            Storage::disk('public')->put($postimage->getFilename().'.'.$extension,  File::get($postimage));
-            $post->mime = $postimage->getClientMimeType();
-            $post->original_filename = $postimage->getClientOriginalName();
-            $post->filename = $postimage->getFilename().'.'.$extension;
-        }
-
-        $post->title = request("title");
-        $post->content = request("content");
-        $post->save();
+        $UpdateAttributesService = new UpdateAttributesService();
+        $UpdateAttributesService->update($request, $post);
 
         return redirect ('/');
     }
